@@ -239,6 +239,8 @@ def read_narrative_examples(input_file, is_training):
     return False
     
   examples = []
+  counter = 0		# my edit
+  qas_old = 0		# my edit
   for para in input_data:
     paragraph_text = para['context.tokens']
     doc_tokens = []
@@ -256,6 +258,16 @@ def read_narrative_examples(input_file, is_training):
       char_to_word_offset.append(len(doc_tokens) - 1)
     
     qas_id = para['_id']
+    
+    # To solve id crisis
+    if qas_id != qas_old:
+      qas_old = qas_id
+      counter = 0
+      qas_id = qas_id + '_' + str(counter)
+    else:
+      counter +=1
+      qas_id = qas_id + '_' + str(counter)
+      
     question_text = para['question.tokens']
     
     orig_answer_text = para['answers'][0]
@@ -1197,7 +1209,6 @@ def main(_):
       predict_batch_size=FLAGS.predict_batch_size)
       
   
-  
   if FLAGS.do_train:
     # We write to a temporary file to avoid storing very large constant tensors
     # in memory.
@@ -1232,7 +1243,6 @@ def main(_):
     print("########### Step 3 complete ################")
     
     estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
-    sys.exit()
 
   if FLAGS.do_predict:
     eval_examples = read_narrative_examples(
